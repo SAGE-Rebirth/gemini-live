@@ -86,7 +86,12 @@ class AudioLoop:
             if text.lower() == "q":
                 break
             if self.session is not None:
-                await self.session.send(input=text or ".", end_of_turn=True)
+                await self.session.send_client_content(
+                    turns=types.Content(
+                        role="user",
+                        parts=[types.Part(text=text or ".")]
+                    )
+                )
             else:
                 print("Session is not initialized. Unable to send text.")
 
@@ -162,7 +167,10 @@ class AudioLoop:
         while True:
             msg = await self.out_queue.get()
             if self.session is not None:
-                await self.session.send(input=msg)
+                # For audio: send as types.Blob
+                await self.session.send_realtime_input(
+                    media=types.Blob(data=msg["data"], mime_type=msg["mime_type"])
+                )
             else:
                 print("Session is not initialized. Unable to send message.")
 
